@@ -1,9 +1,9 @@
 #include <math.h>
 
-int durum = 0;
-int motorCalis = 0;
+int state = 0;
+int motorRun = 0;
 int counter = 0;
-double ortalama = 0;
+double mean = 0;
 
 void setup()
 {
@@ -14,13 +14,18 @@ void setup()
   pinMode(5, OUTPUT);
 }
 
-double Termistor(int analogOkuma)
+/*
+** In this function calculating mean value of temperature for detecting temperature decrease
+*/
+
+double Termistor(int analogRead)
 {
-  double sicaklik;
-  sicaklik = log(((10240000 / analogOkuma) - 10000));
-  sicaklik = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * sicaklik * sicaklik )) * sicaklik );
-  sicaklik = sicaklik - 273.15;
-  return sicaklik;
+  // calculating analog value to true value
+  double temperature;
+  temperature = log(((10240000 / analogRead) - 10000));
+  temperature = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * temperature * temperature )) * temperature );
+  temperature = temperature - 273.15;
+  return temperature;
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
 }
@@ -29,12 +34,12 @@ void motor(){
   counter += 1;
   Serial.println(counter);
   if (counter < 10){
-    Serial.println("Calisiyor");
+    Serial.println("Running");
     digitalWrite(3,HIGH);
     digitalWrite(4,HIGH);
   }
   else{
-    Serial.println("Durdu");
+    Serial.println("Stopped");
     digitalWrite(3, LOW);
     digitalWrite(4,HIGH);
   }
@@ -43,23 +48,22 @@ void motor(){
 void loop()
 {
 
-  int deger;
-  double sicaklik;
-  deger = analogRead(A0);
-  sicaklik = Termistor(deger);
-  /*if (durum == 0){
-    durum = 1;
+  int value;
+  double temperature;
+  value = analogRead(A0);
+  temperature = Termistor(value);
+  /*if (state == 0){
+    state = 1;
     delay(20000);
   }*/
   for (int i = 0; i < 100; i++){
-    deger = analogRead(A0);
-    ortalama = Termistor(deger);
+    value = analogRead(A0);
+    mean = Termistor(value);
   }
-  if(sicaklik < ortalama){
-    Serial.println(sicaklik);
+  if(temperature < mean){
+    Serial.println(temperature);
     digitalWrite(2, HIGH);
-    Serial.println("Suyun altında");
-
+    /*Temperature decreased*/
     motor();
   }
   delay(450);
